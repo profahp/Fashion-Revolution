@@ -1,0 +1,143 @@
+/*MongoDB database for twitter Analysis - (#MeToo)*/
+
+
+
+/**********************************************************************/
+Installation Instructions:
+
+	-Download and install MongoDB server on your desktop:
+		https://www.mongodb.com/download-center/community
+	
+	
+	-Download and install MongoDB Compass on your desktop:
+		https://www.mongodb.com/download-center/compass		  		 
+
+		
+	-Restore Twitter data into your local:
+
+		Steps to restore this data into your local MongoDB:
+		  1-Open command line as Administrator
+             (Start button --> type "cmd" --> right-click on "Command Prompt" --> Click on "Run as Administrator"		  
+			 
+		  2-Navigate to your MongoDB installation directory. (In my case it is C:\Program Files\MongoDB\Server\4.2\bin)
+		     (e.g.: cd C:\Program Files\MongoDB\Server\4.2\bin)
+			 
+		  3-Run command:
+			mongorestore --db [name you want to give for you DB] [path where the files are]						
+			 (e.g mongorestore --db myTwitterDB_MeToo C:\Lia\twitter_DB_BKP)
+			 
+		  4-Test to see if your DB exists
+			run command: mongo
+			run command: use [your db name]
+			
+		  5-See how many records in the tweet collection
+			run command: db.tweet.countDocuments({})			
+	
+
+	-Open MongoDB Compass to start using the data
+	
+	
+	(***Watch video "InstallationSteps - How_To_Video.mp4" to see all of these steps being executed)
+
+
+
+
+/**********************************************************************/
+MongoDB Compass documentation:
+	https://docs.mongodb.com/compass/master/
+	
+	
+
+
+
+/**********************************************************************/
+Content of this DB: 
+  Collections:
+    tweet - (Count: 3,087,475) - (Original Tweets as they are in the json files)
+    focusedTweet - (Count: 3,087,475) - (Only the most important fields on the tweets, plus create date broken down by day, month and year. Also, low case texts to make searches and aggregations more accurate.)
+    tweetWords - (Count: 45,628,309) - (the words in each tweet)
+    loadStatus - (Count: 2) - (Control collection. Needed in case you want to add more files to this database)
+    loadedFiles - (Count: 12) - (Control collection. Needed in case you want to add more files to this database)
+    tweetCountByFileAgg - (Count: 12) - (count of tweets per file)
+    tweetCountByLangAgg - (Count: 1) - (count of tweets per language)
+    tweetCountByPeriodAgg - (Count: 6) - (count of tweets per month)
+    hashTagCountAgg - (Count: 72,375) - (count of tweets per hashtag)
+    htTopic  - (topic analysis per hashtag. Only has hashTags with more than 77*/*/* tweets)
+  
+
+
+
+
+/**********************************************************************/
+Sample mongoDB filters - (to be used in the MongoDB Compass application):
+
+  Find all tweets from a user:
+	{"user.screen_name" : "JeffPackerTV"}
+
+  Tweets from either user 1 or user 2
+	{$or: [{"user.screen_name" : "JeffPackerTV"}, {"user.screen_name" : "EzraFitz_13"}]}
+
+  Tweets from user JeffPackerTV, replying to Jamie_Edmonds
+	{ $and: [ {"user.screen_name" : "JeffPackerTV"}, { "in_reply_to_screen_name" : "Jamie_Edmonds"} ] }
+
+  Find all tweets that have the word “awesome" in it:
+	{ "text" : /.*awesome.*/}
+
+  All replies for a certain tweet:
+	{ "in_reply_to_status_id_str" : "916831814450339840 "}
+
+  All tweets with users that have more than 1000 friends
+	{ "user.friends_count" : { $gt: 1000 } }
+	
+
+  *More operator: https://docs.mongodb.com/manual/reference/operator/query/#query-selectors
+
+
+
+
+/**********************************************************************/
+Sample mongoDB scrips - (to be used in the command line):
+(**These examples are to be used in the mongodb shell. To use it in python, some simple alteration need to be made. The principles are the same.)
+
+  How many records in the tweet collection:
+    db.tweet.countDocuments({})
+
+  How many records in the tweet collection, where the text has the word "yes" on it:
+    db.tweet.countDocuments({text : /yes/})
+  
+  How many records per month:
+    db.focusedTweet.aggregate([{$group : { _id : {year : "$year", month : "$month_no"}, count : {$sum:1} }}])
+
+  How many records per hashtag. (Ordering results in descending order):    
+    db.focusedTweet.aggregate([ { $unwind : '$hashtags' }, { $project: { "hashtags": 1, "text": '$hashtags.text_lower'} },{"$group": { _id : { text: '$text' }, count: { $sum: 1 } } }, { $sort: { count: -1 } } ])
+  
+  Search tweets with users that have more than 2M friends:
+     db.focusedTweet.find({user_friends_count : {$gt : 2000000}})
+
+  Search tweets that have a certain term in their text:
+  	db.focusedTweet.find({text_lower : /austin/})
+
+  Search tweets by a specific user:
+	db.focusedTweet.find({user_screen_name : "JuaniBegood"})
+
+
+  More documentation:
+	https://docs.mongodb.com/manual/reference/method/
+		
+
+  *To learn how to build these scripts using python, you can use examples from the pyTwitterDB.py library.
+  **Also in that library, you can find examples of how to export the mongoDB data into files
+
+
+
+
+/**********************************************************************/
+
+
+
+
+/************************************************
+ Lia Nogueira - l_n63@txstate.edu 
+
+*** This file was last updated on 04/19/2020 ***
+************************************************/
