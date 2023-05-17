@@ -32,7 +32,7 @@ def group_csv():
         df = clean_data_frame(df)
         df.to_csv(DATA_DIR + key + ".csv", encoding='utf-8', index=False)
 
-
+#this is a faster way to clean the data frame
 def clean_data_frame(data_frame):
     # Filter only english language data
     cleaned_df = data_frame[data_frame.lang == "en"]
@@ -59,7 +59,7 @@ def clean_data_frame(data_frame):
     cleaned_df['tweet_text_cleaned'] = cleaned_df['text'].apply(clean_tweet_text)
     return cleaned_df
 
-
+# determining tweet type
 def get_tweet_type(row):
     if not pd.isnull(row['retweeted_user_id']):
         return RETWEET
@@ -103,7 +103,7 @@ def get_target(row):
     else:
         return row['author.username']
 
-
+#generating the edge list
 def gen_edge_list_df(df):
     edge_df = pd.DataFrame(columns=['Time', 'Source', 'Author_Bio', 'Type', 'Tweet', 'Label'])
     edge_df['Time'] = df['created_at']
@@ -142,7 +142,7 @@ def gen_edge_list_df(df):
     # edge_list_file = csv_file.replace(".csv", "_edge_list_bio.csv")
     # final_df.to_csv(edge_list_file, encoding='utf-8', index=False)
 
-
+#generating a file for actos and bios only
 def create_actor_bio_csv(file):
     df = pd.read_csv(file, index_col=0)
     actor_bio_df = df[['author.username', 'author.description']]
@@ -156,7 +156,7 @@ def actor_bio_groups():
     create_actor_bio_csv(DATA_DIR + "grp_16-19.csv")
     create_actor_bio_csv(DATA_DIR + "grp_20-22.csv")
 
-
+#generating an edge list that includes bios
 def generate_edge_with_bio_groups():
     #    optimize_edge_list_gen(DATA_DIR + "grp_13-15.csv")
     #   optimize_edge_list_gen(DATA_DIR + "grp_16-19.csv")
@@ -164,6 +164,7 @@ def generate_edge_with_bio_groups():
     pass
 
 
+#if you have a raw csv, this will generate an edge list
 def parse_raw_csv(raw_csv):
     df = pd.read_csv(raw_csv)
     # DO All Data Cleaning
@@ -174,6 +175,7 @@ def parse_raw_csv(raw_csv):
     edge_list_df.to_csv(raw_csv.replace(".csv", "_edge_list.csv"), encoding='utf-8', index=False)
 
 
+#use this to call any main function. For example: create_actor_bio_csv(filename)
 if __name__ == "__main__":
     filename = "/home/aamir/projects/fashion_revolution/data_dir/2013FashionRevdata.csv"
     parse_raw_csv(filename)
