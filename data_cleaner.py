@@ -32,7 +32,8 @@ def group_csv():
         df = clean_data_frame(df)
         df.to_csv(DATA_DIR + key + ".csv", encoding='utf-8', index=False)
 
-#this is a faster way to clean the data frame
+
+# this is a faster way to clean the data frame
 def clean_data_frame(data_frame):
     # Filter only english language data
     cleaned_df = data_frame[data_frame.lang == "en"]
@@ -59,6 +60,7 @@ def clean_data_frame(data_frame):
     cleaned_df['tweet_text_cleaned'] = cleaned_df['text'].apply(clean_tweet_text)
     return cleaned_df
 
+
 # determining tweet type
 def get_tweet_type(row):
     if not pd.isnull(row['retweeted_user_id']):
@@ -77,11 +79,11 @@ def clean_tweet_text(tweet):
     tweet = str(tweet)
     tweet = re.sub(r'http\S+', '', tweet)
     # Remove mentions
-    #tweet = re.sub(r'@\w+', '', tweet)
+    # tweet = re.sub(r'@\w+', '', tweet)
     # Remove hashtags
-    #tweet = re.sub(r'#\w+', '', tweet)
+    # tweet = re.sub(r'#\w+', '', tweet)
     # Remove non-alphanumeric characters
-    tweet = re.sub(r'\W+', ' ', tweet) #Todo ignore '@' remove rest
+    tweet = re.sub(r'\W+', ' ', tweet)  # Todo ignore '@' remove rest
     # Convert to lowercase
     tweet = tweet.lower()
     # Remove extra spaces
@@ -94,24 +96,28 @@ def get_mentions(obj):
 
 
 def get_target(row):
+    target = None
     if row['tweet_type'] == REPLY:
-        return row['in_reply_to_username']
+        target = row['in_reply_to_username']
     elif row['tweet_type'] == RETWEET:
-        return row['retweeted_username']
+        target = row['retweeted_username']
     elif row['tweet_type'] == QUOTE_TWEET:
-        return row['quoted_username']
+        target = row['quoted_username']
     else:
-        return row['author.username']
+        target = row['author.username']
+    if not target:
+        target = row['author.username']
 
-#generating the edge list
+
+# generating the edge list
 def gen_edge_list_df(df):
-    edge_df = pd.DataFrame(columns=['Time', 'Source', 'Author_Bio', 'Type', 'Tweet', 'Label'])
+    edge_df = pd.DataFrame()
     edge_df['Time'] = df['created_at']
     edge_df['Source'] = df['author.username']
+    edge_df['Target'] = df.apply(get_target, axis=1)
     edge_df['Type'] = df['tweet_type']
     edge_df['Tweet'] = df['tweet_text_cleaned']
     edge_df['Label'] = df['id']
-    edge_df['Target'] = df.apply(get_target, axis=1)
     edge_df['Author_Bio'] = df['author.description']
 
     # df['clean_bio'] = df['author.description'].apply(clean_tweet_text)
@@ -121,19 +127,18 @@ def gen_edge_list_df(df):
     # df['author.entities.description.mentions'].fillna('', inplace=True)
     # mentions = df['author.entities.description.mentions'].apply(get_mentions)
     mention_list = []
-    with Bar('Processing...') as bar:
-        for index, row in df.iterrows():
-            if not pd.isnull(row['author.entities.description.mentions']):
-                mentions = get_mentions(row['author.entities.description.mentions'])
-                for m in mentions:
-                    mention_list.append(
-                        {'Source': row['author.username'],
-                         'Target': m,
-                         'Author_Bio': row['author.description'],
-                         'Type': MENTION,
-                         'Tweet': row['tweet_text_cleaned'],
-                         'Label': row['id']})
-        bar.next()
+    for index, row in df.iterrows():
+        if not pd.isnull(row['author.entities.description.mentions']):
+            mentions = get_mentions(row['author.entities.description.mentions'])
+            for m in mentions:
+                mention_list.append(
+                    {'Time': row['created_at'],
+                     'Source': row['author.username'],
+                     'Target': m,
+                     'Author_Bio': row['author.description'],
+                     'Type': MENTION,
+                     'Tweet': row['tweet_text_cleaned'],
+                     'Label': row['id']})
     df_mentions = pd.DataFrame(mention_list)
     final_df = pd.concat([edge_df, df_mentions])
 
@@ -142,7 +147,8 @@ def gen_edge_list_df(df):
     # edge_list_file = csv_file.replace(".csv", "_edge_list_bio.csv")
     # final_df.to_csv(edge_list_file, encoding='utf-8', index=False)
 
-#generating a file for actos and bios only
+
+# generating a file for actos and bios only
 def create_actor_bio_csv(file):
     df = pd.read_csv(file, index_col=0)
     actor_bio_df = df[['author.username', 'author.description']]
@@ -156,7 +162,8 @@ def actor_bio_groups():
     create_actor_bio_csv(DATA_DIR + "grp_16-19.csv")
     create_actor_bio_csv(DATA_DIR + "grp_20-22.csv")
 
-#generating an edge list that includes bios
+
+# generating an edge list that includes bios
 def generate_edge_with_bio_groups():
     #    optimize_edge_list_gen(DATA_DIR + "grp_13-15.csv")
     #   optimize_edge_list_gen(DATA_DIR + "grp_16-19.csv")
@@ -164,7 +171,7 @@ def generate_edge_with_bio_groups():
     pass
 
 
-#if you have a raw csv, this will generate an edge list
+# if you have a raw csv, this will generate an edge list
 def parse_raw_csv(raw_csv):
     df = pd.read_csv(raw_csv)
     # DO All Data Cleaning
@@ -175,7 +182,7 @@ def parse_raw_csv(raw_csv):
     edge_list_df.to_csv(raw_csv.replace(".csv", "_edge_list.csv"), encoding='utf-8', index=False)
 
 
-#use this to call any main function. For example: create_actor_bio_csv(filename)
+# use this to call any main function. For example: create_actor_bio_csv(filename)
 if __name__ == "__main__":
-    filename = "/home/aamir/projects/fashion_revolution/data_dir/2013FashionRevdata.csv"
+    filename = "/home/aamir/projects/fashion_revolution/temp_plm.csv"
     parse_raw_csv(filename)
