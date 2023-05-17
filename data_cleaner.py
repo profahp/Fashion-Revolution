@@ -2,7 +2,7 @@ import pandas as pd
 import re
 import json
 import csv
-from progress.bar import Bar
+
 
 # Cataglog of how tweet csv will be grouped
 data_catalog = {
@@ -117,7 +117,7 @@ def gen_edge_list_df(df):
     edge_df['Target'] = df.apply(get_target, axis=1)
     edge_df['Type'] = df['tweet_type']
     edge_df['Tweet'] = df['tweet_text_cleaned']
-    edge_df['Label'] = df['id']
+    edge_df['TweetID'] = df['id']
     edge_df['Author_Bio'] = df['author.description']
 
     # df['clean_bio'] = df['author.description'].apply(clean_tweet_text)
@@ -138,7 +138,7 @@ def gen_edge_list_df(df):
                      'Author_Bio': row['author.description'],
                      'Type': MENTION,
                      'Tweet': row['tweet_text_cleaned'],
-                     'Label': row['id']})
+                     'TweetID': row['id']})
     df_mentions = pd.DataFrame(mention_list)
     final_df = pd.concat([edge_df, df_mentions])
 
@@ -184,5 +184,5 @@ def parse_raw_csv(raw_csv):
 
 # use this to call any main function. For example: create_actor_bio_csv(filename)
 if __name__ == "__main__":
-    filename = "/home/aamir/projects/fashion_revolution/data_dir/PLM_tweets_May20_June5,2021.csv"
+    filename = "/Users/ahphillips/Documents/Fashion-Revolution/PLM_tweets_May20_June5,2021.csv"
     parse_raw_csv(filename)
