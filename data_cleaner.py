@@ -56,6 +56,10 @@ def clean_data_frame(data_frame):
         lambda x: '{}'.format(x))'''
 
     # New column tweet_type added
+    cleaned_df['retweeted_username'] = cleaned_df.retweeted_username.astype(str)
+    cleaned_df['in_reply_to_username'] = cleaned_df.in_reply_to_username.astype(str)
+    cleaned_df['quoted_username'] = cleaned_df.quoted_username.astype(str)
+    cleaned_df['author.username'] = cleaned_df['author.username'].astype(str)
     cleaned_df['tweet_type'] = cleaned_df.apply(get_tweet_type, axis=1)
     cleaned_df['tweet_text_cleaned'] = cleaned_df['text'].apply(clean_tweet_text)
     return cleaned_df
@@ -105,7 +109,7 @@ def get_target(row):
         target = row['quoted_username']
     else:
         target = row['author.username']
-    if not target:
+    if not target or target == 'nan':
         target = row['author.username']
     return target
 
@@ -184,5 +188,5 @@ def parse_raw_csv(raw_csv):
 
 # use this to call any main function. For example: create_actor_bio_csv(filename)
 if __name__ == "__main__":
-    filename = "/Users/ahphillips/Documents/Fashion-Revolution/PLM_tweets_May20_June5,2021.csv"
+    filename = "/home/aamir/projects/fashion_revolution/data_dir/PLM_tweets_May20_June5,2021.csv"
     parse_raw_csv(filename)
