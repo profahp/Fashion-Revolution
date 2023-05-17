@@ -107,7 +107,7 @@ def get_target(row):
         target = row['author.username']
     if not target:
         target = row['author.username']
-
+    return target
 
 # generating the edge list
 def gen_edge_list_df(df):
@@ -184,5 +184,5 @@ def parse_raw_csv(raw_csv):
 
 # use this to call any main function. For example: create_actor_bio_csv(filename)
 if __name__ == "__main__":
-    filename = "/home/aamir/projects/fashion_revolution/temp_plm.csv"
+    filename = "/home/aamir/projects/fashion_revolution/data_dir/PLM_tweets_May20_June5,2021.csv"
     parse_raw_csv(filename)
