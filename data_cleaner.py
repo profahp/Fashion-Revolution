@@ -77,11 +77,11 @@ def clean_tweet_text(tweet):
     tweet = str(tweet)
     tweet = re.sub(r'http\S+', '', tweet)
     # Remove mentions
-    tweet = re.sub(r'@\w+', '', tweet)
+    #tweet = re.sub(r'@\w+', '', tweet)
     # Remove hashtags
-    tweet = re.sub(r'#\w+', '', tweet)
+    #tweet = re.sub(r'#\w+', '', tweet)
     # Remove non-alphanumeric characters
-    tweet = re.sub(r'\W+', ' ', tweet)
+    tweet = re.sub(r'\W+', ' ', tweet) #Todo ignore '@' remove rest
     # Convert to lowercase
     tweet = tweet.lower()
     # Remove extra spaces
