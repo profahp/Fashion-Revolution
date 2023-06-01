@@ -185,6 +185,9 @@ def parse_raw_csv(raw_csv):
     edge_list_df = gen_edge_list_df(df)
     edge_list_df.to_csv(raw_csv.replace(".csv", "_edge_list.csv"), encoding='utf-8', index=False)
 
+
+def test_func():
+    return true
 #new comment
 # use this to call any main function. For example: create_actor_bio_csv(filename)
 if __name__ == "__main__":
