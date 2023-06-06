@@ -3,7 +3,6 @@ import re
 import json
 import csv
 
-
 # Cataglog of how tweet csv will be grouped
 data_catalog = {
     "grp_13-15": ["2013FashionRevdata.csv", "2014FashionRevdata.csv", "2015FashionRevdata.csv"],
@@ -81,17 +80,33 @@ def get_tweet_type(row):
 def clean_tweet_text(tweet):
     # Remove URLs
     tweet = str(tweet)
-    tweet = re.sub(r'http\S+', '', tweet)
+    # tweet = re.sub(r'http\S+', '', tweet)
     # Remove mentions
     # tweet = re.sub(r'@\w+', '', tweet)
     # Remove hashtags
     # tweet = re.sub(r'#\w+', '', tweet)
     # Remove non-alphanumeric characters
-    tweet = re.sub(r'\W+', ' ', tweet)  # Todo ignore '@' remove rest
+    link_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    tweet = re.sub(link_pattern, '', tweet)
+    # removes non alphanumeric chars
+    tweet = re.sub(r'[^\sa-zA-Z0-9-]', '', tweet)
+    tweet = tweet.replace("\n", ' ')
     # Convert to lowercase
-    tweet = tweet.lower()
+    tweet = tweet.lower().strip()
     # Remove extra spaces
-    tweet = re.sub(r'\s+', ' ', tweet).strip()
+    # tweet = re.sub(r'\s+', ' ', tweet)
+    return tweet
+
+
+# This module removes # & @ from tweet-text
+def clean_tweet_text_advanced(tweet):
+    # remove urls
+    link_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+    tweet = re.sub(link_pattern, '', tweet)
+    # removes non-alphanumeric chars
+    tweet = re.sub(r'[^\sa-zA-Z0-9-]', '', tweet)
+    # Convert to lowercase remove white spaces
+    tweet = tweet.lower().strip()
     return tweet
 
 
@@ -112,6 +127,7 @@ def get_target(row):
     if not target or target == 'nan':
         target = row['author.username']
     return target
+
 
 # generating the edge list
 def gen_edge_list_df(df):
@@ -186,10 +202,72 @@ def parse_raw_csv(raw_csv):
     edge_list_df.to_csv(raw_csv.replace(".csv", "_edge_list.csv"), encoding='utf-8', index=False)
 
 
-def test_func():
-    return true
-#new comment
+def get_top_retweet(df, range):
+    df = df.sort_values(by='public_metrics.retweet_count', ascending=False)
+    return df.nlargest(range, 'public_metrics.retweet_count')
+
+
+def get_top_likes_tweet(df, range):
+    df = df.sort_values(by='public_metrics.like_count', ascending=False)
+    return df.nlargest(range, 'public_metrics.like_count')
+
+
+def get_top_replied_tweet(df, range):
+    df = df.sort_values(by='public_metrics.reply_count', ascending=False)
+    return df.nlargest(range, 'public_metrics.reply_count')
+
+#sample function to aggregate data and get top tweets
+def generate_top_authors():
+    csv_files = ["/home/aamir/projects/fashion_revolution/data_dir/2013FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2014FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2015FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2016FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2017FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2018FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2019FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2020FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2021FashionRevdata.csv",
+                 "/home/aamir/projects/fashion_revolution/data_dir/2022FashionRevdata.csv"]
+    df = pd.concat(map(pd.read_csv, csv_files), ignore_index=True)
+
+    df = df[
+        ['id', 'referenced_tweets.replied_to.id', 'referenced_tweets.retweeted.id', 'referenced_tweets.quoted.id',
+         'in_reply_to_user_id', 'in_reply_to_username', 'retweeted_user_id', 'retweeted_username', 'quoted_user_id',
+         'quoted_username', 'created_at', 'text', 'public_metrics.impression_count', 'public_metrics.reply_count',
+         'public_metrics.retweet_count', 'public_metrics.quote_count',
+         'public_metrics.like_count', 'entities.annotations', 'entities.hashtags', 'entities.mentions',
+         'entities.urls',
+         'author.id', 'author.created_at', 'author.username', 'author.name',
+         'author.description', 'author.entities.description.hashtags', 'author.entities.description.mentions',
+         'author.entities.description.urls', 'author.entities.url.urls',
+         'author.url', 'author.public_metrics.followers_count', 'author.public_metrics.following_count',
+         'author.public_metrics.listed_count', 'author.public_metrics.tweet_count']]
+    df['retweeted_username'] = df.retweeted_username.astype(str)
+    df['in_reply_to_username'] = df.in_reply_to_username.astype(str)
+    df['quoted_username'] = df.quoted_username.astype(str)
+    df['author.username'] = df['author.username'].astype(str)
+    df['public_metrics.reply_count'] = df['public_metrics.reply_count'].astype(int)
+    df['public_metrics.like_count'] = df['public_metrics.like_count'].astype(int)
+    df['public_metrics.retweet_count'] = df['public_metrics.retweet_count'].astype(int)
+    df['tweet_text_cleaned'] = df['text'].apply(clean_tweet_text)
+    df['tweet_url'] = df.apply(
+        lambda row: "https://twitter.com/{0}/status/{1}".format(row['author.username'], row['id']), axis=1)
+    df.to_csv("fash_rev_data.csv", index=False)
+    top_retweeet_df = get_top_retweet(df, 20)
+    condensed_df = top_retweeet_df[['author.username', 'tweet_text_cleaned', 'public_metrics.retweet_count']]
+    condensed_df.to_csv("top_retweet_tweets.csv", index=False)
+
+    top_likes_df = get_top_likes_tweet(df, 20)
+    condensed_df = top_likes_df[['author.username', 'tweet_text_cleaned', 'public_metrics.like_count']]
+    condensed_df.to_csv("top_likes_tweets.csv", index=False)
+
+    top_replied_df = get_top_replied_tweet(df, 40)
+    condensed_df = top_replied_df[['author.username', 'tweet_text_cleaned', 'public_metrics.reply_count']]
+    condensed_df.to_csv("top_replied_to.csv", index=False)
+
+
 # use this to call any main function. For example: create_actor_bio_csv(filename)
 if __name__ == "__main__":
-    filename = "C:/Users/Adrienne/Desktop/Amina Laddaoui Undergraduate Research Assistant 22-23/BLM-PLM Research/PLM_tweets_May20_June5,2021.csv"
-    parse_raw_csv(filename)
+    generate_top_authors()
+    # filename = "/home/aamir/projects/fashion_revolution/data_dir/PLM_tweets_May20_June5,2021.csv"
+    # parse_raw_csv(filename)
