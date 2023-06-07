@@ -88,8 +88,8 @@ def clean_tweet_text(tweet):
     # Remove non-alphanumeric characters
     link_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     tweet = re.sub(link_pattern, '', tweet)
-    # removes non alphanumeric chars
-    tweet = re.sub(r'[^\sa-zA-Z0-9-]', '', tweet)
+    # removes non alphanumeric chars ig
+    tweet = re.sub(r'[^\sa-zA-Z0-9-@#]', '', tweet)
     tweet = tweet.replace("\n", ' ')
     # Convert to lowercase
     tweet = tweet.lower().strip()
@@ -216,8 +216,9 @@ def get_top_replied_tweet(df, range):
     df = df.sort_values(by='public_metrics.reply_count', ascending=False)
     return df.nlargest(range, 'public_metrics.reply_count')
 
-#sample function to aggregate data and get top tweets
-def generate_top_authors():
+
+# sample function to aggregate data and get top tweets
+def consolidate_fash_rev_data():
     csv_files = ["/home/aamir/projects/fashion_revolution/data_dir/2013FashionRevdata.csv",
                  "/home/aamir/projects/fashion_revolution/data_dir/2014FashionRevdata.csv",
                  "/home/aamir/projects/fashion_revolution/data_dir/2015FashionRevdata.csv",
@@ -252,15 +253,27 @@ def generate_top_authors():
     df['tweet_text_cleaned'] = df['text'].apply(clean_tweet_text)
     df['tweet_url'] = df.apply(
         lambda row: "https://twitter.com/{0}/status/{1}".format(row['author.username'], row['id']), axis=1)
+    df['tweet_type'] = df.apply(get_tweet_type, axis=1)
     df.to_csv("fash_rev_data.csv", index=False)
+
+
+def get_top_actors_tweet(csv_file):
+
+    df = pd.read_csv(csv_file)
+    # remove retweets
+    df = df[df['tweet_type'] != RETWEET]
+
+    # retweets
     top_retweeet_df = get_top_retweet(df, 20)
     condensed_df = top_retweeet_df[['author.username', 'tweet_text_cleaned', 'public_metrics.retweet_count']]
     condensed_df.to_csv("top_retweet_tweets.csv", index=False)
 
+    # likes
     top_likes_df = get_top_likes_tweet(df, 20)
     condensed_df = top_likes_df[['author.username', 'tweet_text_cleaned', 'public_metrics.like_count']]
     condensed_df.to_csv("top_likes_tweets.csv", index=False)
 
+    # Replied
     top_replied_df = get_top_replied_tweet(df, 40)
     condensed_df = top_replied_df[['author.username', 'tweet_text_cleaned', 'public_metrics.reply_count']]
     condensed_df.to_csv("top_replied_to.csv", index=False)
@@ -268,6 +281,7 @@ def generate_top_authors():
 
 # use this to call any main function. For example: create_actor_bio_csv(filename)
 if __name__ == "__main__":
-    generate_top_authors()
+    # csv file should contain tweet type column
+    get_top_actors_tweet("fash_rev_data.csv")
     # filename = "/home/aamir/projects/fashion_revolution/data_dir/PLM_tweets_May20_June5,2021.csv"
     # parse_raw_csv(filename)
