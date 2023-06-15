@@ -80,6 +80,8 @@ def get_tweet_type(row):
 def clean_tweet_text(tweet):
     # Remove URLs
     tweet = str(tweet)
+    # remove \n
+    tweet = ' '.join(tweet.split("\n"))
     # tweet = re.sub(r'http\S+', '', tweet)
     # Remove mentions
     # tweet = re.sub(r'@\w+', '', tweet)
@@ -90,7 +92,6 @@ def clean_tweet_text(tweet):
     tweet = re.sub(link_pattern, '', tweet)
     # removes non alphanumeric chars ig
     tweet = re.sub(r'[^\sa-zA-Z0-9-@#]', '', tweet)
-    tweet = tweet.replace("\n", ' ')
     # Convert to lowercase
     tweet = tweet.lower().strip()
     # Remove extra spaces
@@ -100,6 +101,8 @@ def clean_tweet_text(tweet):
 
 # This module removes # & @ from tweet-text
 def clean_tweet_text_advanced(tweet):
+    # remove \n
+    tweet = ' '.join(tweet.split("\n"))
     # remove urls
     link_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     tweet = re.sub(link_pattern, '', tweet)
@@ -274,14 +277,28 @@ def get_top_actors_tweet(csv_file):
     condensed_df.to_csv("top_likes_tweets.csv", index=False)
 
     # Replied
-    top_replied_df = get_top_replied_tweet(df, 40)
+    top_replied_df = get_top_replied_tweet(df, 20)
     condensed_df = top_replied_df[['author.username', 'tweet_text_cleaned', 'public_metrics.reply_count']]
     condensed_df.to_csv("top_replied_to.csv", index=False)
 
 
-# use this to call any main function. For example: create_actor_bio_csv(filename)
-if __name__ == "__main__":
-    # csv file should contain tweet type column
-    get_top_actors_tweet("fash_rev_data.csv")
-    # filename = "/home/aamir/projects/fashion_revolution/data_dir/PLM_tweets_May20_June5,2021.csv"
-    # parse_raw_csv(filename)
+# generate edge list for actors with most retweeted tweets
+def top_actors_edge_list(cleaned_csv):
+    df = pd.read_csv(cleaned_csv)
+
+    non_r_df = df[df['tweet_type'] != RETWEET]
+    non_r_df = non_r_df.sort_values(by='public_metrics.retweet_count', ascending=False)
+    non_r_df = non_r_df.drop_duplicates(subset='author.username')
+    top_retweets_df = get_top_retweet(non_r_df, 20)
+    top20_authors = top_retweets_df['author.username'].to_list()
+    filtered_df = df[df['retweeted_username'].isin(top20_authors)]
+    edge_df = pd.DataFrame()
+    edge_df['TweetID'] = filtered_df['id']
+    edge_df['Time'] = filtered_df['created_at']
+    edge_df['Tweet'] = filtered_df['tweet_text_cleaned']
+    edge_df['Source'] = filtered_df['author.username']
+    edge_df['Target'] = filtered_df['retweeted_username']
+    edge_df.to_csv("test_edge_info.csv", index=False)
+
+
+
