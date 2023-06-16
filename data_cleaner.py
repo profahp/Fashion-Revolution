@@ -268,17 +268,17 @@ def get_top_actors_tweet(csv_file):
 
     # retweets
     top_retweet_df = get_top_retweet(df, 20)
-    condensed_df = top_retweet_df[['author.username', 'tweet_text_cleaned', 'public_metrics.retweet_count']]
+    condensed_df = top_retweet_df[['author.username', 'tweet_text_cleaned', 'clean_tweet_text_advanced', 'public_metrics.retweet_count']]
     condensed_df.to_csv("top_retweet_tweets.csv", index=False)
 
     # likes
     top_likes_df = get_top_likes_tweet(df, 20)
-    condensed_df = top_likes_df[['author.username', 'tweet_text_cleaned', 'public_metrics.like_count']]
+    condensed_df = top_likes_df[['author.username', 'tweet_text_cleaned', 'clean_tweet_text_advanced', 'public_metrics.like_count']]
     condensed_df.to_csv("top_likes_tweets.csv", index=False)
 
     # Replied
     top_replied_df = get_top_replied_tweet(df, 20)
-    condensed_df = top_replied_df[['author.username', 'tweet_text_cleaned', 'public_metrics.reply_count']]
+    condensed_df = top_replied_df[['author.username', 'tweet_text_cleaned', 'clean_tweet_text_advanced', 'public_metrics.reply_count']]
     condensed_df.to_csv("top_replied_to.csv", index=False)
 
 
@@ -292,12 +292,12 @@ def top_actors_edge_list(cleaned_csv):
     top20_authors = top_retweets_df['author.username'].to_list()
     filtered_df = df[df['retweeted_username'].isin(top20_authors)]
     edge_df = pd.DataFrame()
-    edge_df['TweetID'] = filtered_df['id']
     edge_df['Time'] = filtered_df['created_at']
-    edge_df['Tweet'] = filtered_df['tweet_text_cleaned']
+    edge_df['TweetID'] = filtered_df['id']
     edge_df['Source'] = filtered_df['author.username']
     edge_df['Target'] = filtered_df['retweeted_username']
-    edge_df.to_csv("test_edge_info.csv", index=False)
+    edge_df['Tweet'] = filtered_df['tweet_text_cleaned']
+    edge_df.to_csv("top_retweeters_edge_list.csv", index=False)
 
 
 # use this to call any main function. For example: create_actor_bio_csv(filename)
