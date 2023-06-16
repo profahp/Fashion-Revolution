@@ -61,6 +61,7 @@ def clean_data_frame(data_frame):
     cleaned_df['author.username'] = cleaned_df['author.username'].astype(str)
     cleaned_df['tweet_type'] = cleaned_df.apply(get_tweet_type, axis=1)
     cleaned_df['tweet_text_cleaned'] = cleaned_df['text'].apply(clean_tweet_text)
+    cleaned_df['clean_text_adv'] = cleaned_df['text'].apply(clean_tweet_text_advanced)
     return cleaned_df
 
 
