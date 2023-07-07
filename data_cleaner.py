@@ -105,7 +105,8 @@ def clean_tweet_text(tweet):
 # This module removes # & @ from tweet-text
 def clean_tweet_text_advanced(tweet):
     # remove new lines
-    tweet = " ".join(tweet.split("\n"))
+    tweet = re.sub(r'\\n', ' ', tweet)
+    tweet = re.sub(r'\n', ' ', tweet)
     # remove urls
     link_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     tweet = re.sub(link_pattern, '', tweet)
