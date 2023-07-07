@@ -82,23 +82,24 @@ def clean_tweet_text(tweet):
     # Remove URLs
     tweet = str(tweet)
     # remove new lines
-    tweet = " ".join(tweet.split("\n"))
+    tweet = re.sub(r'\\n', ' ', tweet)
+    tweet = re.sub(r'\n', ' ', tweet)
     # tweet = re.sub(r'http\S+', '', tweet)
     # Remove mentions
     # tweet = re.sub(r'@\w+', '', tweet)
     # Remove hashtags
     # tweet = re.sub(r'#\w+', '', tweet)
-    # Remove non-alphanumeric characters
+    # Remove non-alphanumeric characterstweet = re.sub(r'\\n', ' ', tweet)
     link_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     tweet = re.sub(link_pattern, '', tweet)
     # removes non alphanumeric chars ig
     tweet = re.sub(r'[^\sa-zA-Z0-9-@#]', '', tweet)
     tweet = tweet.replace("\n", ' ')
+    tweet = re.sub(r'#\s', '', tweet)
     # Convert to lowercase
-    tweet = tweet.lower().strip()
-    # Remove extra spaces
-    # tweet = re.sub(r'\s+', ' ', tweet)
-    return tweet
+    tweet = tweet.lower()
+    # Remove empty hashtags
+    return tweet.strip()
 
 
 # This module removes # & @ from tweet-text
@@ -186,14 +187,6 @@ def actor_bio_groups():
     create_actor_bio_csv(DATA_DIR + "grp_13-15.csv")
     create_actor_bio_csv(DATA_DIR + "grp_16-19.csv")
     create_actor_bio_csv(DATA_DIR + "grp_20-22.csv")
-
-
-# generating an edge list that includes bios
-def generate_edge_with_bio_groups():
-    #    optimize_edge_list_gen(DATA_DIR + "grp_13-15.csv")
-    #   optimize_edge_list_gen(DATA_DIR + "grp_16-19.csv")
-    #    optimize_edge_list_gen(DATA_DIR + "grp_20-22.csv")
-    pass
 
 
 # if you have a raw csv, this will generate an edge list
